@@ -179,3 +179,21 @@ Work Log:
 - Updated page.tsx: Boot→Login→Desktop flow, lock screen, notification center
 - Clean ESLint: 0 errors, 0 warnings
 - Successful compilation: 200 response
+---
+Task ID: 1
+Agent: Main
+Task: Improve CyberWin AI OS login system - remove any-credential access, add demo credentials (dev/cyberwin123), error messages, clean auth architecture
+
+Work Log:
+- Read existing login-screen.tsx, lock-screen.tsx, store.ts to understand current auth flow
+- Created `src/os/lib/auth.ts` - clean authentication service module with typed interfaces (AuthCredentials, AuthResult), demo user registry, async `authenticate()` and `verifySessionPassword()` functions. Clearly marked demo-mode sections with comments explaining how to swap for real API.
+- Rewrote `src/os/components/login-screen.tsx` - removed "any credential works" hint, added proper field-level validation (red borders on fields, per-field error messages), form-level error display (icon + red banner), shake animation on failed login, loading spinner in button, demo credentials displayed at bottom in monospace badges, proper autocomplete attributes
+- Updated `src/os/components/lock-screen.tsx` - now validates password against auth service, shows error with icon for wrong password, shake animation on failure, loading spinner, "Sign out" button that calls clearAuth() to return to login screen, fixed React hooks ordering (moved useCallback before early return)
+- Updated `src/os/store.ts` - added `isAuthenticated` boolean, `setAuthenticated(username)` action, `clearAuth()` action (resets to login), changed default username from 'cyberwin' to '' (empty until authenticated)
+
+Stage Summary:
+- Files created: src/os/lib/auth.ts
+- Files modified: src/os/components/login-screen.tsx, src/os/components/lock-screen.tsx, src/os/store.ts
+- Demo credentials: username=`dev`, password=`cyberwin123`
+- Auth architecture is cleanly separated - auth.ts contains all validation logic with clear markers for replacing with real API calls
+- All lint checks pass

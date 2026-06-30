@@ -18,6 +18,9 @@ interface OSState {
   setUsername: (u: string) => void;
   avatar: string;
   setAvatar: (a: string) => void;
+  isAuthenticated: boolean;
+  setAuthenticated: (username: string) => void;
+  clearAuth: () => void;
 
   // Theme
   theme: Theme;
@@ -63,10 +66,13 @@ export const useOSStore = create<OSState>((set, get) => ({
   // Boot / Login / Lock
   bootPhase: 'booting',
   setBootPhase: (phase) => set({ bootPhase: phase }),
-  username: 'cyberwin',
+  username: '',
   setUsername: (u) => set({ username: u }),
   avatar: '',
   setAvatar: (a) => set({ avatar: a }),
+  isAuthenticated: false,
+  setAuthenticated: (username) => set({ username, isAuthenticated: true }),
+  clearAuth: () => set({ isAuthenticated: false, bootPhase: 'login' }),
 
   // Theme
   theme: 'dark',
