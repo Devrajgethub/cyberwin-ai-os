@@ -92,3 +92,90 @@ Stage Summary:
 - All 11 apps functional, server stable, API working
 - Total files created/modified: 23+
 - Architecture is modular: new apps can be added by creating a component and adding to registry
+
+---
+Task ID: 6 (Batch 2)
+Agent: Apps Builder Batch 2
+Task: Build 5 new media/utility apps (PDF Viewer, Image Viewer, Music Player, Video Player, Paint)
+
+Work Log:
+- Built pdf-viewer-app.tsx: toolbar with open/zoom/nav, sidebar thumbnails, 7-page simulated "Security Assessment Report" (cover, TOC, exec summary, vuln assessment, network review, pentest results, recommendations), keyboard nav, zoom percentage
+- Built image-viewer-app.tsx: toolbar with zoom/rotate/flip, 5 gradient placeholder images with labels, thumbnail strip, checkerboard background, info overlay (resolution, file size), keyboard left/right nav, zoom slider
+- Built music-player-app.tsx: now-playing area with album art gradient, seek bar, play/pause/prev/next/shuffle/repeat controls, volume slider, playlist sidebar with 8 cyberpunk-themed songs, simulated playback with interval-based progress advance
+- Built video-player-app.tsx: large video display with scanline effect, play overlay, REC indicator, seek bar, controls (play/pause/stop/volume/fullscreen), 5 video thumbnails with titles, simulated playback, info overlay (resolution, codec, FPS, bitrate)
+- Built paint-app.tsx: real HTML5 Canvas with useRef, 4 brush sizes (S/M/L/XL), 10 preset colors, eraser mode, clear canvas, mouse + touch event handlers for drawing, dark canvas background (#1a1a2e), status bar
+- Updated registry.ts with 5 new app entries (all utility category)
+- Updated page.tsx with imports and component mappings for all 5 new apps
+- Fixed 3 ESLint errors (setState in useEffect → moved to interval callbacks; ref updates during render → moved to useEffect)
+- Clean ESLint: 0 errors, 0 warnings
+
+Stage Summary:
+- 5 new apps fully functional, total app count now 16
+- PDF Viewer renders a complete 7-page simulated security report
+- Paint app has real drawing functionality with mouse/touch support
+- Music and Video players have simulated playback with progress bars
+- All apps follow cyberpunk dark theme with cyan accents and shadcn/ui components
+- Total new files: 5 app components + 2 updated files (registry.ts, page.tsx)
+
+---
+Task ID: 7 (Batch 3)
+Agent: Apps Builder Batch 3
+Task: Build 5 new apps (System Update, Backup, Help Center, Cyber Academy, upgraded File Manager)
+
+Work Log:
+- Built system-update-app.tsx: current version display (v2.0.0), "Check for Updates" button with 2s spinner simulation, available update card (v2.1.0) with categorized changelog (New/Improved/Fixed/Security badges), download progress bar (5s simulated), completion state, update history with 4 past entries in expandable list
+- Built backup-app.tsx: status card with green check and "Last backup: 2 hours ago", "Create Backup Now" button with progress simulation, backup history (5 entries: Full System, Documents, Settings, Security, Full System) with dates/sizes/type badges and Restore buttons (1.5s spinner), radio group for backup schedule (Daily/Weekly/Monthly), storage usage progress bar (4.8 GB / 20 GB)
+- Built help-center-app.tsx: search bar with real-time filtering, 4 quick-link buttons with badges, 6 expandable categories (Getting Started 3 articles, Window Management 3, Security Tools 4, Settings & Customization 3, Keyboard Shortcuts list, Troubleshooting 3), each article has title/preview with expand-to-read full content, "Contact Support" button at bottom
+- Built cyber-learning-app.tsx: course catalog grid (2 columns) with 6 courses (Intro Network Security 75%, Crypto Fundamentals 40%, Pen Testing Basics 10%, Digital Forensics 0%, Malware Analysis 0%, Social Engineering Defense 0%), difficulty badges (Beginner/Intermediate/Advanced), progress bars, lesson counts, category icons, click-to-view lesson list with checkboxes, progress overview header (courses started / total lessons)
+- Overwrote file-manager-app.tsx with full IndexedDB integration: imports dbGetAllFiles/dbSaveFile/dbDeleteFile from @/os/lib/db, seeds 30+ files/dirs on first load, toolbar buttons (FolderPlus, FilePlus, Pencil, Trash2) for New Folder/New File/Rename/Delete, uses window.prompt for names and window.confirm for delete, flat path-based storage rendered as tree, file viewer for text-based files (.txt/.md/.log/.sh/.py/.ts/.js/.json), dir rename updates all child paths, maintains all existing features (sidebar, breadcrumbs, grid/list views, details panel)
+- Updated registry.ts with 4 new entries (system-update 600x500, backup 650x500, help-center 700x520, cyber-learning 800x560)
+- Updated page.tsx with imports and component mappings for all 4 new apps
+- Clean ESLint: 0 errors, 0 warnings
+
+Stage Summary:
+- 4 new apps + 1 upgraded app, total functional app count now 25
+- System Update has full check/download/install simulation with history
+- Backup has create/restore simulation, schedule radio, and storage meter
+- Help Center has searchable documentation with 16+ real articles
+- Cyber Academy has 6 courses with 71 lessons and interactive checkboxes
+- File Manager now persists to IndexedDB with create/rename/delete operations
+- All apps follow cyberpunk dark theme with cyan accents and shadcn/ui components
+
+---
+Task ID: 5 (Batch 1)
+Agent: Apps Builder Batch 1
+Task: Build 5 new apps (Browser, Calendar, Todo, Profile, App Store)
+
+Work Log:
+- Built browser-app.tsx: multi-tab browser with URL bar (back/forward/refresh/go/home), bookmarks bar with 5 presets, simulated page content for cyberwin.local (CyberWin homepage with feature cards), wikipedia.org (fake cybersecurity article with TOC), github.com, stackoverflow.com, developer.mozilla.org, and default "Page Loaded" fallback; add/close tabs, navigation history per tab
+- Built calendar-app.tsx: month grid calendar with day-of-week headers, prev/next month navigation, today button, 6 pre-populated security-themed events across different days (Security Audit, Team Standup, Network Scan, Patch Deployment, Incident Review, Firewall Update), colored dots on days with events, right panel showing selected day's events with delete, add event dialog (title, time, color picker with 5 options)
+- Built todo-app.tsx: left sidebar with 4 categories (All, Work, Personal, Security) with task counts, sort by priority/due date/name, add task input with priority selector, 10 pre-populated security-related tasks with priority badges (High/Medium/Low) and category badges, checkbox toggle complete with strikethrough, delete on hover, footer showing completed/total count with percentage
+- Built profile-app.tsx: centered profile layout with avatar circle and online status indicator, username from useOSStore, editable fields (Display Name, Bio, Location, Role), system info card (Username, Hostname, Shell, Uptime), activity stats grid (Sessions Opened, Apps Launched, Files Created), security section (Last Login, Account Status Active, 2FA Enabled), save button with inline success feedback
+- Built app-store-app.tsx: search bar, 6 category filters (All, Security, Productivity, Media, Developer, System), featured section with 3 highlighted apps (Password Manager, VPN Client, System Monitor) in horizontal scroll cards, 2-column app grid with 12 total apps (some pre-installed, some "Get"), simulated install animation (Installing... → Installed with setTimeout), category badges, descriptions
+- Updated registry.ts with 5 new app entries (browser: 900x600, calendar: 800x520, todo: 650x500, profile: 500x600, app-store: 800x560)
+- Updated page.tsx with imports and component mappings for all 5 new apps
+- Clean ESLint: 0 errors, 1 warning (pre-existing in file-manager)
+
+Stage Summary:
+- 5 new apps fully functional, total app count now 21
+- Browser simulates 5 different websites with tab management and navigation history
+- Calendar has interactive month view with event management via dialog
+- Todo has full CRUD with category filtering, sorting, and priority badges
+- Profile reads live username from Zustand store with editable fields and system info
+- App Store has search, filtering, featured section, and simulated install flow
+- All apps follow cyberpunk dark theme with cyan accents and shadcn/ui components
+- Total new files: 5 app components + 2 updated files (registry.ts, page.tsx)---
+Task ID: 8
+Agent: Main Orchestrator
+Task: V2 Infrastructure integration
+
+Work Log:
+- Created src/os/lib/db.ts: IndexedDB persistence (notes, settings, files)
+- Updated store.ts: bootPhase, username, notifications, lock screen state
+- Created boot-animation.tsx, login-screen.tsx, lock-screen.tsx, notification-center.tsx
+- Updated taskbar.tsx: Bell icon, Lock button, notification toggle
+- Updated desktop-icon.tsx: 18 new lucide icon mappings
+- Updated registry.ts: 26 apps across 5 categories
+- Updated page.tsx: Boot→Login→Desktop flow, lock screen, notification center
+- Clean ESLint: 0 errors, 0 warnings
+- Successful compilation: 200 response

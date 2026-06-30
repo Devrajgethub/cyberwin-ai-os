@@ -7,7 +7,7 @@ import { appRegistry, categoryLabels, getAppMeta } from '@/os/apps/registry';
 import { IconByName } from './desktop-icon';
 import { Power, Search } from 'lucide-react';
 
-const pinnedAppIds = ['terminal', 'file-manager', 'ai-assistant', 'security-dashboard', 'code-editor', 'settings', 'network-monitor', 'notes'];
+const pinnedAppIds = ['terminal', 'file-manager', 'ai-assistant', 'security-dashboard', 'browser', 'code-editor', 'app-store', 'settings'];
 
 export default function StartMenu() {
   const isStartMenuOpen = useOSStore((s) => s.isStartMenuOpen);
