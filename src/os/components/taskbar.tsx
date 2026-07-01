@@ -17,6 +17,7 @@ export default function Taskbar() {
   const toggleNotification = useOSStore((s) => s.toggleNotification);
   const notifications = useOSStore((s) => s.notifications);
   const setBootPhase = useOSStore((s) => s.setBootPhase);
+  const username = useOSStore((s) => s.username);
   const [time, setTime] = useState(new Date());
 
   useEffect(() => { const t = setInterval(() => setTime(new Date()), 1000); return () => clearInterval(t); }, []);
@@ -70,9 +71,16 @@ export default function Taskbar() {
           <div className="flex items-center justify-center w-8 h-10"><Wifi size={14} className="text-gray-400" /></div>
           <div className="flex items-center justify-center w-8 h-10"><Volume2 size={14} className="text-gray-400" /></div>
           <div className="flex items-center justify-center w-8 h-10"><Battery size={14} className="text-gray-400" /></div>
-          <div className="flex flex-col items-end justify-center h-10 px-2 text-gray-300 cursor-pointer" onClick={() => setBootPhase('locked')}>
-            <span className="text-[11px] leading-tight font-medium">{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-            <span className="text-[10px] leading-tight text-gray-500 hidden sm:block">{time.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+          <div className="flex items-center gap-2 h-10 px-2 cursor-pointer hover:bg-white/[0.04] rounded-lg transition-colors" onClick={() => setBootPhase('locked')}>
+            <div className="flex flex-col items-end justify-center">
+              <span className="text-[11px] leading-tight font-medium text-gray-300">{time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              <span className="text-[10px] leading-tight text-gray-500 hidden sm:block">{time.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+            </div>
+            {username && (
+              <div className="w-7 h-7 rounded-full bg-cyan-500/15 border border-cyan-500/20 flex items-center justify-center text-[10px] font-bold text-cyan-400 uppercase">
+                {username[0]}
+              </div>
+            )}
           </div>
         </div>
       </div>

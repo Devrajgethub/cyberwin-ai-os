@@ -56,6 +56,7 @@ export default function Home() {
   const theme = useOSStore((s) => s.theme);
   const bootPhase = useOSStore((s) => s.bootPhase);
   const setBootPhase = useOSStore((s) => s.setBootPhase);
+  const hydrateSession = useOSStore((s) => s.hydrateSession);
   const windows = useOSStore((s) => s.windows);
   const closeStartMenu = useOSStore((s) => s.closeStartMenu);
   const closeNotification = useOSStore((s) => s.closeNotification);
@@ -66,7 +67,11 @@ export default function Home() {
     else document.documentElement.classList.remove('dark');
   }, [theme]);
 
-  const handleBootDone = useCallback(() => setBootPhase('login'), [setBootPhase]);
+  const handleBootDone = useCallback(() => {
+    // Check for a persisted session — skip login if found
+    const restored = hydrateSession();
+    setBootPhase(restored ? 'desktop' : 'login');
+  }, [setBootPhase, hydrateSession]);
 
   // Click desktop to close menus
   const handleDesktopClick = () => {

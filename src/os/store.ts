@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { WindowState, Theme, DesktopIconData } from './types';
+import { saveSession, restoreSession, clearSession } from './lib/session';
 
 export interface Notification {
   id: string;
@@ -21,6 +22,7 @@ interface OSState {
   isAuthenticated: boolean;
   setAuthenticated: (username: string) => void;
   clearAuth: () => void;
+  hydrateSession: () => boolean;
 
   // Theme
   theme: Theme;
@@ -71,8 +73,23 @@ export const useOSStore = create<OSState>((set, get) => ({
   avatar: '',
   setAvatar: (a) => set({ avatar: a }),
   isAuthenticated: false,
-  setAuthenticated: (username) => set({ username, isAuthenticated: true }),
-  clearAuth: () => set({ isAuthenticated: false, bootPhase: 'login' }),
+  setAuthenticated: (username) => {
+    saveSession(username);          // --- persist session (replace with real API) ---
+    set({ username, isAuthenticated: true });
+  },
+  clearAuth: () => {
+    clearSession();                 // --- destroy session (replace with real API) ---
+    set({ isAuthenticated: false, bootPhase: 'login' });
+  },
+  /** Restore a persisted session on page load. Returns true if a session was restored. */
+  hydrateSession: () => {
+    const session = restoreSession(); // --- check persisted session (replace with real API) ---
+    if (session) {
+      set({ username: session.username, isAuthenticated: true });
+      return true;
+    }
+    return false;
+  },
 
   // Theme
   theme: 'dark',
