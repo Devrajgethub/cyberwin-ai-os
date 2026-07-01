@@ -215,3 +215,20 @@ Stage Summary:
 - Username visible in taskbar as avatar initial
 - All `// --- replace with real API ---` comments in place for future upgrade
 - Lint clean, compilation verified (200 OK)
+---
+Task ID: 3
+Agent: Main
+Task: Create README.md, landing page at /landing, and project footer
+
+Work Log:
+- Generated AI cover image (1344x768) saved to public/screenshots/hero-cover.png
+- Created README.md with all requested sections: badges, screenshots table, features list, 26-app table, tech stack table, installation, folder structure, demo credentials, security disclaimer, ethical usage note, roadmap (v2.1/v2.2/v3.0), license
+- Created /landing route: hero section with logo + animated entrance, AI-generated cover image, 8 feature cards in 4-column grid, 6 app category cards (System/Security/AI/Utility/Media/System Tools), tech stack grid, screenshot placeholders, CTA with glow effect
+- Created /landing layout.tsx that overrides root body overflow-hidden for scrollable page
+- Footer: "Built by Dev · For learning, portfolio, and ethical cyber security demo purposes only."
+- Fixed Store name collision (lucide import vs custom function), fixed lint set-state-in-effect via useSyncExternalStore
+- Both / and /landing verified (200), lint clean, OS untouched
+
+Stage Summary:
+- Files: README.md, public/screenshots/hero-cover.png, src/app/landing/page.tsx, src/app/landing/layout.tsx
+- Git commit: 5586fcc "Add portfolio-ready README and landing page"
