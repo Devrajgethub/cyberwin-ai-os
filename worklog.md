@@ -197,3 +197,21 @@ Stage Summary:
 - Demo credentials: username=`dev`, password=`cyberwin123`
 - Auth architecture is cleanly separated - auth.ts contains all validation logic with clear markers for replacing with real API calls
 - All lint checks pass
+---
+Task ID: 2
+Agent: Main
+Task: Add session persistence + username in taskbar + git commit
+
+Work Log:
+- Created `src/os/lib/session.ts` — localStorage-based session persistence with saveSession/restoreSession/clearSession/hasSession functions
+- Updated `src/os/store.ts` — setAuthenticated now calls saveSession(), clearAuth now calls clearSession(), added hydrateSession() action that restores session from localStorage
+- Updated `src/app/page.tsx` — handleBootDone now calls hydrateSession() after boot; if session exists → skip login → go straight to desktop
+- Updated `src/os/components/taskbar.tsx` — added username avatar (first letter in cyan circle) next to clock in system tray, clicking it locks screen
+- Git committed: "Improve CyberWin AI OS demo authentication"
+
+Stage Summary:
+- Session persistence: login survives page refresh
+- Sign out (from lock screen) clears session → back to login
+- Username visible in taskbar as avatar initial
+- All `// --- replace with real API ---` comments in place for future upgrade
+- Lint clean, compilation verified (200 OK)
