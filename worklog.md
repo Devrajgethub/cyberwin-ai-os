@@ -232,3 +232,26 @@ Work Log:
 Stage Summary:
 - Files: README.md, public/screenshots/hero-cover.png, src/app/landing/page.tsx, src/app/landing/layout.tsx
 - Git commit: 5586fcc "Add portfolio-ready README and landing page"
+---
+Task ID: 1
+Agent: full-stack-developer
+Task: Recreate floating-assistant.tsx
+
+Work Log:
+- Read store, AI assistant, speech recognition hook, and brain.ts for context
+- Created src/os/hooks/use-speech-recognition.ts: Web Speech API hook with useSyncExternalStore for isSupported, continuous/interim recognition, start/stop/toggle
+- Created src/os/ai/brain.ts: speakDirect and stopSpeaking using Web Speech Synthesis API
+- Created complete floating-assistant.tsx with CyberSpider mascot SVG (cyberpunk spider with cyan outlines, red eyes, web thread)
+- Added mic button with useSpeechRecognition hook and red pulse animation when listening
+- Added Gemini API integration (/api/gemini POST) with local fallback responses
+- Added draggable position (mouse + touch) with localStorage persistence (cyberwin_assistant_pos)
+- Added 4 animation modes (floating, hanging, swinging, idle) with CSS keyframes
+- Chat bubble appears above mascot with glass-morphism, arrow pointer, quick action buttons
+- Quick actions: Open Notes, Open Terminal, Open Files, Security Report, Lock Screen, Hide Assistant
+- Local state for settings (animation, speed, size, voiceEnabled, enabled)
+- data-no-wallpaper-menu attribute on container
+- Lint passed with 0 errors, 0 warnings
+
+Stage Summary:
+- Files created: src/os/components/floating-assistant.tsx, src/os/hooks/use-speech-recognition.ts, src/os/ai/brain.ts
+- Floating assistant fully functional with voice, chat, drag, animations

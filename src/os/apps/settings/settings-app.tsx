@@ -1,35 +1,32 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Monitor, Palette, HardDrive, Globe, ShieldCheck, Cpu } from 'lucide-react';
+import { Monitor, Palette, HardDrive, Globe, ShieldCheck, Bug, Volume2, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useOSStore } from '@/os/store';
 import type { AppProps } from '@/os/types';
 
-const categories = [
-  { id: 'appearance', label: 'Appearance', icon: Palette },
-  { id: 'system', label: 'System', icon: Monitor },
-  { id: 'display', label: 'Display', icon: Monitor },
-  { id: 'network', label: 'Network', icon: Globe },
-  { id: 'storage', label: 'Storage', icon: HardDrive },
-  { id: 'security', label: 'Privacy & Security', icon: ShieldCheck },
-] as const;
-
-type CategoryId = (typeof categories)[number]['id'];
-
-const wallpapers = [
-  { id: 'cyber-dark', label: 'Cyber Dark', gradient: 'linear-gradient(135deg, #0a0a1a 0%, #0d1117 30%, #0a1628 60%, #050510 100%)' },
-  { id: 'matrix', label: 'Matrix', gradient: 'linear-gradient(180deg, #000a00 0%, #001a00 50%, #000500 100%)' },
-  { id: 'deep-ocean', label: 'Deep Ocean', gradient: 'linear-gradient(135deg, #020024 0%, #090979 40%, #00d4ff 100%)' },
-  { id: 'sunset', label: 'Cyber Sunset', gradient: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 30%, #4a1942 60%, #1a0a2e 100%)' },
-  { id: 'midnight', label: 'Midnight', gradient: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' },
+// ── Wallpaper options ──
+const GRADIENT_WALLPAPERS = [
+  { id: 'cyber-dark', label: 'Cyber Dark', value: 'linear-gradient(135deg, #0a0a1a 0%, #0d1117 30%, #0a1628 60%, #050510 100%)' },
+  { id: 'matrix', label: 'Matrix', value: 'linear-gradient(180deg, #000a00 0%, #001a00 50%, #000500 100%)' },
+  { id: 'deep-ocean', label: 'Deep Ocean', value: 'linear-gradient(135deg, #020024 0%, #090979 40%, #00d4ff 100%)' },
+  { id: 'sunset', label: 'Cyber Sunset', value: 'linear-gradient(135deg, #1a0a2e 0%, #2d1b4e 30%, #4a1942 60%, #1a0a2e 100%)' },
+  { id: 'midnight', label: 'Midnight', value: 'linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%)' },
 ];
+
+const IMAGE_WALLPAPERS = [
+  { id: 'neon-city', label: 'Neon City', value: 'url(/wallpapers/neon-city.jpg) center/cover no-repeat' },
+  { id: 'motherboard', label: 'Motherboard', value: 'url(/wallpapers/motherboard-led.jpg) center/cover no-repeat' },
+  { id: 'dark-wave', label: 'Dark Wave', value: 'url(/wallpapers/cyber-dark-wave.jpg) center/cover no-repeat' },
+  { id: 'neon-grid', label: 'Neon Grid', value: 'url(/wallpapers/neon-grid.jpg) center/cover no-repeat' },
+  { id: 'scene-1', label: 'Cyber Scene 1', value: 'url(/wallpapers/cyberpunk-scene-1.png) center/cover no-repeat' },
+  { id: 'scene-2', label: 'Cyber Scene 2', value: 'url(/wallpapers/cyberpunk-scene-2.png) center/cover no-repeat' },
+];
+
+const ALL_WALLPAPERS = [...GRADIENT_WALLPAPERS, ...IMAGE_WALLPAPERS];
 
 const accentColors = [
   { id: 'cyan', label: 'Cyan', color: '#06b6d4' },
@@ -39,10 +36,31 @@ const accentColors = [
   { id: 'rose', label: 'Rose', color: '#f43f5e' },
 ];
 
+const categories = [
+  { id: 'appearance', label: 'Appearance', icon: Palette },
+  { id: 'spider-ai', label: 'Spider AI', icon: Bug },
+  { id: 'system', label: 'System', icon: Monitor },
+  { id: 'display', label: 'Display', icon: Monitor },
+  { id: 'network', label: 'Network', icon: Globe },
+  { id: 'storage', label: 'Storage', icon: HardDrive },
+  { id: 'security', label: 'Privacy & Security', icon: ShieldCheck },
+] as const;
+
+type CategoryId = (typeof categories)[number]['id'];
+
+// ── Appearance Section (Wallpaper + Theme) ──
 function AppearanceSection() {
-  const { theme, setTheme, toggleTheme } = useOSStore();
-  const [selectedWallpaper, setSelectedWallpaper] = useState('cyber-dark');
-  const [selectedAccent, setSelectedAccent] = useState('cyan');
+  const { theme, toggleTheme } = useOSStore();
+  const [wallpaper, setWallpaper] = useState(() => {
+    try { return localStorage.getItem('cyberwin_wallpaper') || 'cyber-dark'; } catch { return 'cyber-dark'; }
+  });
+
+  const handleWallpaperChange = (id: string) => {
+    setWallpaper(id);
+    try { localStorage.setItem('cyberwin_wallpaper', id); } catch { /* noop */ }
+    // Dispatch custom event so desktop can listen
+    window.dispatchEvent(new CustomEvent('wallpaper-change', { detail: id }));
+  };
 
   return (
     <div className="space-y-6">
@@ -54,32 +72,55 @@ function AppearanceSection() {
             <div className="text-sm text-gray-200">Dark Mode</div>
             <div className="text-xs text-gray-500 mt-0.5">Switch between dark and light appearance</div>
           </div>
-          <Switch
-            checked={theme === 'dark'}
-            onCheckedChange={() => toggleTheme()}
-          />
+          <Switch checked={theme === 'dark'} onCheckedChange={() => toggleTheme()} />
         </div>
       </div>
 
-      {/* Wallpaper */}
+      {/* Gradient Wallpapers */}
       <div>
-        <h3 className="text-sm font-medium text-gray-200 mb-3">Wallpaper</h3>
+        <h3 className="text-sm font-medium text-gray-200 mb-3">Wallpaper — Gradients</h3>
         <div className="grid grid-cols-5 gap-2">
-          {wallpapers.map((wp) => (
+          {GRADIENT_WALLPAPERS.map((wp) => (
             <button
               key={wp.id}
-              onClick={() => setSelectedWallpaper(wp.id)}
+              onClick={() => handleWallpaperChange(wp.id)}
               className={`h-16 rounded-lg border-2 transition-all ${
-                selectedWallpaper === wp.id
+                wallpaper === wp.id
                   ? 'border-cyan-500 ring-1 ring-cyan-500/30'
                   : 'border-white/[0.06] hover:border-white/[0.15]'
               }`}
-              style={{ background: wp.gradient }}
+              style={{ background: wp.value }}
               title={wp.label}
             />
           ))}
         </div>
-        <div className="text-xs text-gray-500 mt-2">Selected: {wallpapers.find((w) => w.id === selectedWallpaper)?.label}</div>
+      </div>
+
+      {/* Image Wallpapers */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-200 mb-3">Wallpaper — Images</h3>
+        <div className="grid grid-cols-3 gap-2">
+          {IMAGE_WALLPAPERS.map((wp) => (
+            <div
+              key={wp.id}
+              onClick={() => handleWallpaperChange(wp.id)}
+              className={`h-20 rounded-lg border-2 overflow-hidden transition-all cursor-pointer ${
+                wallpaper === wp.id
+                  ? 'border-cyan-500 ring-1 ring-cyan-500/30'
+                  : 'border-white/[0.06] hover:border-white/[0.15]'
+              }`}
+              style={{ background: wp.value }}
+              title={wp.label}
+            >
+              <div className="w-full h-full flex items-end p-1.5 bg-black/30">
+                <span className="text-[9px] text-white/80">{wp.label}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="text-xs text-gray-500 mt-2">
+          Selected: {ALL_WALLPAPERS.find((w) => w.id === wallpaper)?.label}
+        </div>
       </div>
 
       {/* Accent Color */}
@@ -89,10 +130,7 @@ function AppearanceSection() {
           {accentColors.map((c) => (
             <button
               key={c.id}
-              onClick={() => setSelectedAccent(c.id)}
-              className={`w-8 h-8 rounded-full transition-all ${
-                selectedAccent === c.id ? 'ring-2 ring-offset-2 ring-offset-[#0a0a14]' : 'hover:scale-110'
-              }`}
+              className={`w-8 h-8 rounded-full transition-all hover:scale-110`}
               style={{ background: c.color, ringColor: c.color }}
               title={c.label}
             />
@@ -103,6 +141,147 @@ function AppearanceSection() {
   );
 }
 
+// ── Spider AI Section ──
+function SpiderAISection() {
+  const [spiderEnabled, setSpiderEnabled] = useState(() => {
+    try { return localStorage.getItem('cyberwin_spider_enabled') !== 'false'; } catch { return true; }
+  });
+  const [voiceEnabled, setVoiceEnabled] = useState(() => {
+    try { return localStorage.getItem('cyberwin_spider_voice') !== 'false'; } catch { return true; }
+  });
+  const [animation, setAnimation] = useState<'floating' | 'hanging' | 'swinging' | 'idle'>(() => {
+    try { return (localStorage.getItem('cyberwin_spider_anim') as typeof animation) || 'floating'; } catch { return 'floating'; }
+  });
+  const [speed, setSpeed] = useState<'slow' | 'normal' | 'fast'>(() => {
+    try { return (localStorage.getItem('cyberwin_spider_speed') as typeof speed) || 'normal'; } catch { return 'normal'; }
+  });
+  const [size, setSize] = useState(() => {
+    try { return Number(localStorage.getItem('cyberwin_spider_size')) || 80; } catch { return 80; }
+  });
+
+  const updateSetting = (key: string, value: string) => {
+    try { localStorage.setItem(key, value); } catch { /* noop */ }
+    window.dispatchEvent(new CustomEvent('spider-settings-change'));
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Enable/Disable */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-200 mb-3">CyberSpider AI Assistant</h3>
+        <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center">
+              <Bug size={16} className="text-red-400" />
+            </div>
+            <div>
+              <div className="text-sm text-gray-200">Enable Spider AI</div>
+              <div className="text-xs text-gray-500">Floating assistant on desktop</div>
+            </div>
+          </div>
+          <Switch
+            checked={spiderEnabled}
+            onCheckedChange={(v) => {
+              setSpiderEnabled(v);
+              updateSetting('cyberwin_spider_enabled', String(v));
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Voice */}
+      <div>
+        <div className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03] border border-white/[0.06]">
+          <div className="flex items-center gap-3">
+            <Volume2 size={16} className="text-cyan-400" />
+            <div>
+              <div className="text-sm text-gray-200">Voice Output</div>
+              <div className="text-xs text-gray-500">AI replies will be spoken aloud</div>
+            </div>
+          </div>
+          <Switch
+            checked={voiceEnabled}
+            onCheckedChange={(v) => {
+              setVoiceEnabled(v);
+              updateSetting('cyberwin_spider_voice', String(v));
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Animation */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-200 mb-3">Animation</h3>
+        <div className="grid grid-cols-2 gap-2">
+          {(['floating', 'hanging', 'swinging', 'idle'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => {
+                setAnimation(mode);
+                updateSetting('cyberwin_spider_anim', mode);
+              }}
+              className={`p-2.5 rounded-lg border text-xs capitalize transition-all ${
+                animation === mode
+                  ? 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
+                  : 'border-white/[0.06] text-gray-400 hover:border-white/[0.15] hover:text-gray-200'
+              }`}
+            >
+              {mode}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Speed */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-200 mb-3">Speed</h3>
+        <div className="flex gap-2">
+          {(['slow', 'normal', 'fast'] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => {
+                setSpeed(s);
+                updateSetting('cyberwin_spider_speed', s);
+              }}
+              className={`flex-1 p-2.5 rounded-lg border text-xs capitalize transition-all ${
+                speed === s
+                  ? 'border-cyan-500 bg-cyan-500/10 text-cyan-400'
+                  : 'border-white/[0.06] text-gray-400 hover:border-white/[0.15] hover:text-gray-200'
+              }`}
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Size */}
+      <div>
+        <h3 className="text-sm font-medium text-gray-200 mb-3">
+          Size: <span className="text-cyan-400">{size}px</span>
+        </h3>
+        <input
+          type="range"
+          min={40}
+          max={150}
+          value={size}
+          onChange={(e) => {
+            const v = Number(e.target.value);
+            setSize(v);
+            updateSetting('cyberwin_spider_size', String(v));
+          }}
+          className="w-full accent-cyan-500"
+        />
+        <div className="flex justify-between text-[10px] text-gray-600 mt-1">
+          <span>40px</span>
+          <span>150px</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── System Section ──
 function SystemSection() {
   return (
     <div className="space-y-4">
@@ -127,6 +306,7 @@ function SystemSection() {
   );
 }
 
+// ── Display Section ──
 function DisplaySection() {
   return (
     <div className="space-y-4">
@@ -149,6 +329,7 @@ function DisplaySection() {
   );
 }
 
+// ── Network Section ──
 function NetworkSection() {
   return (
     <div className="space-y-4">
@@ -179,6 +360,7 @@ function NetworkSection() {
   );
 }
 
+// ── Storage Section ──
 function StorageSection() {
   const total = 256;
   const used = 80;
@@ -204,7 +386,6 @@ function StorageSection() {
         </div>
         <div className="text-xs text-gray-500 mt-2">{percent}% used — {total - used} GB available</div>
       </div>
-
       <div className="space-y-2">
         {items.map((item) => (
           <div key={item.label} className="flex items-center justify-between p-2.5 rounded-lg bg-white/[0.02]">
@@ -220,6 +401,7 @@ function StorageSection() {
   );
 }
 
+// ── Security Section ──
 function SecuritySection() {
   return (
     <div className="space-y-4">
@@ -244,8 +426,10 @@ function SecuritySection() {
   );
 }
 
+// ── Sections Map ──
 const sections: Record<CategoryId, React.ComponentType> = {
   appearance: AppearanceSection,
+  'spider-ai': SpiderAISection,
   system: SystemSection,
   display: DisplaySection,
   network: NetworkSection,

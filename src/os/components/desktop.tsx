@@ -3,6 +3,7 @@
 import React from 'react';
 import { useOSStore } from '@/os/store';
 import DesktopIcon from './desktop-icon';
+import FloatingAssistant from './floating-assistant';
 
 interface DesktopProps {
   onClick?: () => void;
@@ -34,6 +35,7 @@ export default function Desktop({ onClick }: DesktopProps) {
           <DesktopIcon key={icon.appId} appId={icon.appId} label={icon.label} icon={icon.icon} />
         ))}
       </div>
+      <FloatingAssistant />
     </div>
   );
 }
