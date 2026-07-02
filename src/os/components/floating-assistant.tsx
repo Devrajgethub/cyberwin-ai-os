@@ -28,7 +28,7 @@ const quickActions = [
   { id: 'open-notes', label: 'Open Notes', icon: FileText, appId: 'notes' },
   { id: 'open-terminal', label: 'Open Terminal', icon: Terminal, appId: 'terminal' },
   { id: 'open-files', label: 'Open Files', icon: FolderOpen, appId: 'file-manager' },
-  { id: 'security-report', label: 'Security Report', icon: Shield, appId: 'report-generator' },
+  { id: 'security-report', label: 'Security Report', icon: Shield, appId: 'security-dashboard' },
   { id: 'lock-screen', label: 'Lock Screen', icon: Lock },
   { id: 'hide-me', label: 'Hide Assistant', icon: EyeOff },
 ];
@@ -66,40 +66,36 @@ function getAnimationStyle(mode: string, speed: string): React.CSSProperties {
   return { animation: `${name} ${duration} ease-in-out infinite` };
 }
 
+// ─── Helper to safely read localStorage ────────────────────────────
+function lsGet(key: string, fallback: string): string {
+  if (typeof window === 'undefined') return fallback;
+  try { return localStorage.getItem(key) || fallback; } catch { return fallback; }
+}
+
 // ─── CyberSpider SVG mascot ────────────────────────────────────────
 function CyberSpiderSVG({ size }: { size: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Web thread from top */}
       <line x1="40" y1="0" x2="40" y2="22" stroke="#00e5ff" strokeWidth="1.5" strokeDasharray="3 2" opacity="0.7" />
-      {/* Body - abdomen */}
       <ellipse cx="40" cy="50" rx="16" ry="14" fill="#0a0a1a" stroke="#00e5ff" strokeWidth="1.5" />
-      {/* Body - cephalothorax */}
       <ellipse cx="40" cy="32" rx="11" ry="10" fill="#0a0a1a" stroke="#00e5ff" strokeWidth="1.5" />
-      {/* Abdomen pattern */}
       <path d="M34 46 Q40 40 46 46" stroke="#00e5ff" strokeWidth="1" opacity="0.5" fill="none" />
       <path d="M35 52 Q40 47 45 52" stroke="#00e5ff" strokeWidth="1" opacity="0.4" fill="none" />
       <circle cx="40" cy="43" r="2" fill="#00e5ff" opacity="0.3" />
-      {/* Eyes - main */}
       <circle cx="36" cy="29" r="3.5" fill="#0a0a1a" stroke="#ff0040" strokeWidth="1" />
       <circle cx="44" cy="29" r="3.5" fill="#0a0a1a" stroke="#ff0040" strokeWidth="1" />
-      {/* Eye glow */}
       <circle cx="36" cy="29" r="1.8" fill="#ff0040" opacity="0.9" />
       <circle cx="44" cy="29" r="1.8" fill="#ff0040" opacity="0.9" />
-      {/* Side eyes */}
       <circle cx="32" cy="32" r="1.5" fill="#ff0040" opacity="0.5" />
       <circle cx="48" cy="32" r="1.5" fill="#ff0040" opacity="0.5" />
-      {/* Left legs */}
       <path d="M29 28 Q18 22 12 28" stroke="#00e5ff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
       <path d="M29 33 Q16 30 10 38" stroke="#00e5ff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
       <path d="M29 38 Q18 40 14 48" stroke="#00e5ff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
       <path d="M31 44 Q22 50 18 58" stroke="#00e5ff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-      {/* Right legs */}
       <path d="M51 28 Q62 22 68 28" stroke="#00e5ff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
       <path d="M51 33 Q64 30 70 38" stroke="#00e5ff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
       <path d="M51 38 Q62 40 66 48" stroke="#00e5ff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
       <path d="M49 44 Q58 50 62 58" stroke="#00e5ff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-      {/* Fangs */}
       <line x1="37" y1="38" x2="35" y2="43" stroke="#ff0040" strokeWidth="1" opacity="0.7" />
       <line x1="43" y1="38" x2="45" y2="43" stroke="#ff0040" strokeWidth="1" opacity="0.7" />
     </svg>
@@ -111,12 +107,33 @@ export default function FloatingAssistant() {
   const openWindow = useOSStore((s) => s.openWindow);
   const setBootPhase = useOSStore((s) => s.setBootPhase);
 
-  // Local settings state
-  const [animation] = useState<'floating' | 'hanging' | 'swinging' | 'idle'>('floating');
-  const [speed] = useState<'fast' | 'normal' | 'slow'>('normal');
-  const [size] = useState(80);
-  const [voiceEnabled] = useState(true);
-  const [enabled, setEnabled] = useState(true);
+  // Read settings from localStorage (synced with Settings app)
+  const [animation, setAnimation] = useState<'floating' | 'hanging' | 'swinging' | 'idle'>(() =>
+    (lsGet('cyberwin_spider_anim', 'floating') as typeof animation) || 'floating'
+  );
+  const [speed, setSpeed] = useState<'fast' | 'normal' | 'slow'>(() =>
+    (lsGet('cyberwin_spider_speed', 'normal') as typeof speed) || 'normal'
+  );
+  const [size, setSize] = useState(() => Number(lsGet('cyberwin_spider_size', '80')) || 80);
+  const [voiceEnabled, setVoiceEnabled] = useState(() =>
+    lsGet('cyberwin_spider_voice', 'true') !== 'false'
+  );
+  const [enabled, setEnabled] = useState(() =>
+    lsGet('cyberwin_spider_enabled', 'true') !== 'false'
+  );
+
+  // Listen for settings changes from Settings app
+  useEffect(() => {
+    const handler = () => {
+      setAnimation((lsGet('cyberwin_spider_anim', 'floating') as typeof animation) || 'floating');
+      setSpeed((lsGet('cyberwin_spider_speed', 'normal') as typeof speed) || 'normal');
+      setSize(Number(lsGet('cyberwin_spider_size', '80')) || 80);
+      setVoiceEnabled(lsGet('cyberwin_spider_voice', 'true') !== 'false');
+      setEnabled(lsGet('cyberwin_spider_enabled', 'true') !== 'false');
+    };
+    window.addEventListener('spider-settings-change', handler);
+    return () => window.removeEventListener('spider-settings-change', handler);
+  }, []);
 
   // Position state with localStorage persistence
   const [pos, setPos] = useState<{ x: number; y: number }>(() => {
@@ -152,6 +169,35 @@ export default function FloatingAssistant() {
     } catch { /* ignore */ }
   }, [pos]);
 
+  // ─── Send message (defined BEFORE the useEffect that uses it) ────
+  const handleSend = useCallback(async (text?: string) => {
+    const msgText = (text || input).trim();
+    if (!msgText || isLoading) return;
+
+    const userMsg = { role: 'user', content: msgText };
+    setMessages((prev) => [...prev, userMsg]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const res = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })) }),
+      });
+      const data = await res.json();
+      const aiText = data?.text || getLocalResponse(msgText);
+      setMessages((prev) => [...prev, { role: 'assistant', content: aiText }]);
+      if (voiceEnabled) speakDirect(aiText);
+    } catch {
+      const localResp = getLocalResponse(msgText);
+      setMessages((prev) => [...prev, { role: 'assistant', content: localResp }]);
+      if (voiceEnabled) speakDirect(localResp);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [input, isLoading, messages, voiceEnabled]);
+
   // Handle final transcript from mic → send as message
   const stopListeningRef = useRef(stopListening);
   stopListeningRef.current = stopListening;
@@ -180,7 +226,7 @@ export default function FloatingAssistant() {
 
   // Mouse drag
   const onMouseDown = useCallback((e: React.MouseEvent) => {
-    if (chatOpen) return; // don't drag when chat is open
+    if (chatOpen) return;
     e.preventDefault();
     onDragStart(e.clientX, e.clientY);
 
@@ -212,35 +258,6 @@ export default function FloatingAssistant() {
     window.addEventListener('touchmove', handleMove);
     window.addEventListener('touchend', handleEnd);
   }, [chatOpen, onDragStart, onDragMove, onDragEnd]);
-
-  // ─── Send message ─────────────────────────────────────────────
-  const handleSend = useCallback(async (text?: string) => {
-    const msgText = (text || input).trim();
-    if (!msgText || isLoading) return;
-
-    const userMsg = { role: 'user', content: msgText };
-    setMessages((prev) => [...prev, userMsg]);
-    setInput('');
-    setIsLoading(true);
-
-    try {
-      const res = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })) }),
-      });
-      const data = await res.json();
-      const aiText = data?.text || getLocalResponse(msgText);
-      setMessages((prev) => [...prev, { role: 'assistant', content: aiText }]);
-      if (voiceEnabled) speakDirect(aiText);
-    } catch {
-      const localResp = getLocalResponse(msgText);
-      setMessages((prev) => [...prev, { role: 'assistant', content: localResp }]);
-      if (voiceEnabled) speakDirect(localResp);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [input, isLoading, messages, voiceEnabled]);
 
   // ─── Quick action handler ─────────────────────────────────────
   const handleQuickAction = useCallback((action: typeof quickActions[number]) => {
@@ -284,17 +301,13 @@ export default function FloatingAssistant() {
         className="fixed z-[9999] select-none"
         style={{ left: pos.x, top: pos.y }}
       >
-        {/* Chat bubble — appears ABOVE the mascot */}
         {chatOpen && (
           <div
             className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-[320px]"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Arrow pointing down */}
             <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 bg-[#0c1222]/95 border-b border-r border-white/10" />
-
             <div className="rounded-xl bg-[#0c1222]/95 backdrop-blur-xl border border-white/10 shadow-2xl shadow-cyan-500/5 overflow-hidden">
-              {/* Header */}
               <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.06]">
                 <Radio size={14} className="text-cyan-400" />
                 <span className="text-xs font-semibold text-cyan-300 tracking-widest">CYBERSPIDER AI</span>
@@ -311,7 +324,6 @@ export default function FloatingAssistant() {
                 </button>
               </div>
 
-              {/* Messages area */}
               <div className="max-h-48 overflow-y-auto p-3 space-y-2 custom-scrollbar">
                 {messages.length === 0 && (
                   <div className="text-center text-gray-500 text-xs py-4">
@@ -340,14 +352,12 @@ export default function FloatingAssistant() {
                 )}
               </div>
 
-              {/* Interim transcript */}
               {isListening && interimTranscript && (
                 <div className="px-3 py-1 text-[10px] text-red-400/80 italic truncate border-t border-white/[0.04]">
                   🎤 {interimTranscript}
                 </div>
               )}
 
-              {/* Input row */}
               <div className="flex items-center gap-1.5 px-3 py-2 border-t border-white/[0.06]">
                 {isSupported && (
                   <button
@@ -386,7 +396,6 @@ export default function FloatingAssistant() {
                 </button>
               </div>
 
-              {/* Quick actions */}
               <div className="flex flex-wrap gap-1 px-3 py-2 border-t border-white/[0.04]">
                 {quickActions.map((action) => (
                   <button
@@ -403,7 +412,6 @@ export default function FloatingAssistant() {
           </div>
         )}
 
-        {/* Mascot — click to toggle chat */}
         <div
           className="cursor-pointer"
           style={getAnimationStyle(animation, speed)}

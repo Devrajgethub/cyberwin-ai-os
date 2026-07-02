@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   ArrowLeft, BookOpen, CheckCircle2, Circle, GraduationCap,
-  Shield, Lock, Crosshair, Search, Bug, Users, BarChart3,
+  Shield, Lock, Crosshair, Search, Bug, Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';

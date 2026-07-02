@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Trash2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +15,7 @@ interface Note {
   updatedAt: string;
 }
 
-const initialNotes: Note[] = [
+const SEED_NOTES: Note[] = [
   {
     id: '1',
     title: 'Security Audit Checklist',
@@ -25,21 +25,56 @@ const initialNotes: Note[] = [
   {
     id: '2',
     title: 'Network Configuration',
-    content: `Network Configuration Notes\n===========================\n\nSubnet: 192.168.1.0/24\nGateway: 192.168.1.1\nDNS Primary: 1.1.1.1\nDNS Secondary: 8.8.8.8\n\nVLAN Configuration:\n- VLAN 10: Management (192.168.10.0/24)\n- VLAN 20: Development (192.168.20.0/24)\n- VLAN 30: Production (192.168.30.0/24)\n\nStatic Routes:\n- 10.0.0.0/8 via 192.168.1.254\n- 172.16.0.0/12 via 192.168.1.254`,
+    content: `Network Configuration Notes\n===========================\n\nSubnet: 192.168.1.0/24\nGateway: 192.168.1.1\nDNS Primary: 1.1.1.1\nDNS Secondary: 8.8.8.8\n\nVLAN Configuration:\n- VLAN 10: Management (192.168.10.0/24)\n- VLAN 20: Development (192.168.20.0/24)\n- VLAN 30: Production (192.168.30.0/24)`,
     updatedAt: '2024-01-20',
   },
   {
     id: '3',
     title: 'Meeting Notes - Sprint Planning',
-    content: `Sprint Planning - Jan 22, 2024\n=============================\n\nAttendees: Security Team\n\nAction Items:\n1. Complete vulnerability scan by Wednesday\n2. Update firewall rules for new subnet\n3. Deploy updated IDS signatures\n4. Review access logs from weekend incident\n\nKey Decisions:\n- Moving to zero-trust architecture\n- New SIEM tool evaluation next sprint\n- Monthly security training for all developers`,
+    content: `Sprint Planning - Jan 22, 2024\n=============================\n\nAttendees: Security Team\n\nAction Items:\n1. Complete vulnerability scan by Wednesday\n2. Update firewall rules for new subnet\n3. Deploy updated IDS signatures\n4. Review access logs from weekend incident`,
     updatedAt: '2024-01-22',
   },
 ];
 
 export default function NotesApp({ windowId: _windowId }: AppProps) {
-  const [notes, setNotes] = useState<Note[]>(initialNotes);
-  const [activeNoteId, setActiveNoteId] = useState<string>(initialNotes[0].id);
+  const [notes, setNotes] = useState<Note[]>(() => {
+    if (typeof window === 'undefined') return SEED_NOTES;
+    try {
+      const saved = localStorage.getItem('cyberwin_notes');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch { /* ignore */ }
+    return SEED_NOTES;
+  });
+  const [activeNoteId, setActiveNoteId] = useState<string>(() => {
+    if (typeof window === 'undefined') return SEED_NOTES[0].id;
+    try {
+      const saved = localStorage.getItem('cyberwin_notes');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed[0].id;
+      }
+    } catch { /* ignore */ }
+    return SEED_NOTES[0].id;
+  });
+
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Seed localStorage on first load
+  useEffect(() => {
+    const hasExisting = localStorage.getItem('cyberwin_notes');
+    if (!hasExisting) {
+      try { localStorage.setItem('cyberwin_notes', JSON.stringify(SEED_NOTES)); } catch { /* noop */ }
+    }
+  }, []);
+
+  // Persist notes to localStorage whenever they change
+  const saveNotes = useCallback((updated: Note[]) => {
+    setNotes(updated);
+    try { localStorage.setItem('cyberwin_notes', JSON.stringify(updated)); } catch { /* noop */ }
+  }, []);
 
   const activeNote = notes.find((n) => n.id === activeNoteId);
 
@@ -52,8 +87,8 @@ export default function NotesApp({ windowId: _windowId }: AppProps) {
     : notes;
 
   const updateNote = (id: string, content: string) => {
-    setNotes((prev) =>
-      prev.map((n) => {
+    saveNotes(
+      notes.map((n) => {
         if (n.id !== id) return n;
         const firstLine = content.split('\n')[0] || 'Untitled';
         return { ...n, content, title: firstLine.replace(/[#*=\-_]/g, '').trim() || 'Untitled', updatedAt: new Date().toISOString().slice(0, 10) };
@@ -64,20 +99,24 @@ export default function NotesApp({ windowId: _windowId }: AppProps) {
   const createNote = () => {
     const id = Date.now().toString();
     const newNote: Note = { id, title: 'Untitled', content: '', updatedAt: new Date().toISOString().slice(0, 10) };
-    setNotes((prev) => [newNote, ...prev]);
+    saveNotes([newNote, ...notes]);
     setActiveNoteId(id);
   };
 
   const deleteNote = (id: string) => {
     const remaining = notes.filter((n) => n.id !== id);
-    setNotes(remaining);
+    saveNotes(remaining);
     if (activeNoteId === id && remaining.length > 0) {
       setActiveNoteId(remaining[0].id);
+    } else if (remaining.length === 0) {
+      setActiveNoteId('');
     }
   };
 
   const wordCount = activeNote ? activeNote.content.trim().split(/\s+/).filter(Boolean).length : 0;
   const charCount = activeNote ? activeNote.content.length : 0;
+
+  
 
   return (
     <div className="h-full w-full flex bg-black/20">

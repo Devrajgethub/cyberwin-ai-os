@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Plus, Trash2, ListFilter, CheckCircle2, Circle, Calendar, Flame, Minus } from 'lucide-react';
+import { Plus, Trash2, CheckCircle2, Circle, Calendar, Flame, Minus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';

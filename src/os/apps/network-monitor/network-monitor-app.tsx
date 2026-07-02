@@ -103,7 +103,9 @@ export default function NetworkMonitorApp({ windowId: _windowId }: AppProps) {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      const el = scrollRef.current;
+      const viewport = el.closest('[data-radix-scroll-area-viewport]') || el.parentElement;
+      if (viewport) viewport.scrollTop = viewport.scrollHeight;
     }
   }, [packets]);
 
@@ -194,7 +196,8 @@ export default function NetworkMonitorApp({ windowId: _windowId }: AppProps) {
 
       {/* Packet Table */}
       <div className="flex-1 min-h-0 px-3 pb-3">
-        <ScrollArea className="h-full" ref={scrollRef}>
+        <ScrollArea className="h-full">
+        <div ref={scrollRef}>
           <div className="font-mono text-[11px]">
             <div className="grid grid-cols-[70px_1fr_1fr_60px_60px_60px] gap-1 text-gray-500 uppercase tracking-wider text-[9px] px-2 py-1 border-b border-white/[0.04] sticky top-0 bg-[#0a0a0f]">
               <span>Time</span><span>Source</span><span>Destination</span><span>Proto</span><span>Size</span><span>Status</span>
@@ -210,6 +213,7 @@ export default function NetworkMonitorApp({ windowId: _windowId }: AppProps) {
               </div>
             ))}
           </div>
+        </div>
         </ScrollArea>
       </div>
     </div>

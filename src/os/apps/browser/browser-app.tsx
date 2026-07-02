@@ -337,7 +337,6 @@ export default function BrowserApp({ windowId: _windowId }: AppProps) {
           <button
             key={bm.url}
             onClick={() => {
-              setActiveTabId(activeTabId);
               setUrlInput(bm.url);
               navigate(bm.url);
             }}

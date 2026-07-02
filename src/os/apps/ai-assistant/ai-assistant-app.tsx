@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Send, Bot, User, Loader2, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useSpeechRecognition } from '@/os/hooks/use-speech-recognition';
+import { speakDirect, stopSpeaking } from '@/os/ai/brain';
 import type { AppProps } from '@/os/types';
 
 interface ChatMessage {
@@ -20,34 +22,24 @@ function getTimestamp() {
   return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 }
 
-function generateAIResponse(message: string): string {
+function generateLocalResponse(message: string): string {
   const lower = message.toLowerCase();
-
   if (lower.includes('scan') || lower.includes('vulnerability') || lower.includes('vuln')) {
-    return 'I can help with vulnerability scanning. Based on the current system configuration, I recommend:\n\n1. **Run a full port scan**: Use `nmap -sV -sC 192.168.1.0/24` to identify open services\n2. **Check for known CVEs**: Cross-reference discovered services against the NVD database\n3. **Review firewall rules**: Ensure no unnecessary ports are exposed\n\nThe Security Dashboard shows 1 critical and 2 high-severity vulnerabilities that need immediate attention. Would you like me to provide more details on any of these?';
+    return 'I can help with vulnerability scanning. Based on the current system configuration, I recommend:\n\n1. **Run a full port scan**: Use `nmap -sV -sC 192.168.1.0/24` to identify open services\n2. **Check for known CVEs**: Cross-reference discovered services against the NVD database\n3. **Review firewall rules**: Ensure no unnecessary ports are exposed\n\nThe Security Dashboard shows 1 critical and 2 high-severity vulnerabilities that need immediate attention.';
   }
   if (lower.includes('network') || lower.includes('connection') || lower.includes('traffic')) {
-    return 'Network analysis summary:\n\n📊 **Current Status**: 24 active connections\n📈 **Bandwidth**: ~2.5 Mbps down, ~400 Kbps up\n🔒 **Firewall**: Active with 10 rules (7 allow, 3 deny)\n\nRecent activity shows normal traffic patterns with a few notable events:\n- Port scan detected from 192.168.1.200 at 14:31\n- Unusual outbound traffic on port 4444 at 13:45\n- Rate limiting applied to 192.168.1.150\n\nWould you like me to investigate any specific connection or traffic pattern?';
+    return 'Network analysis summary:\n\n📊 **Current Status**: 24 active connections\n📈 **Bandwidth**: ~2.5 Mbps down, ~400 Kbps up\n🔒 **Firewall**: Active with 10 rules (7 allow, 3 deny)\n\nRecent activity shows normal traffic patterns with a few notable events:\n- Port scan detected from 192.168.1.200 at 14:31\n- Unusual outbound traffic on port 4444 at 13:45';
   }
   if (lower.includes('firewall') || lower.includes('rule') || lower.includes('block')) {
-    return 'Firewall status: **ACTIVE** ✅\n\nCurrent configuration:\n- **10 total rules** (8 active, 2 inactive)\n- **Allow rules**: 6 (HTTPS, HTTP, DNS, MySQL from LAN, SSH from LAN)\n- **Deny rules**: 4 (External SSH, ICMP from internal, Telnet, SMB)\n\n⚠️ **Recommendations**:\n1. Consider blocking port 445 (SMB) from all external sources\n2. Enable the WireGuard VPN rule for secure remote access\n3. Add rate limiting rules for SSH to prevent brute force\n\nShall I help you create a new firewall rule?';
-  }
-  if (lower.includes('log') || lower.includes('audit') || lower.includes('event')) {
-    return 'Log analysis results:\n\n📋 **Total entries**: 22+ recorded events\n🔴 **Errors** (3): Failed login attempts, SSL cert issues, DB connection pool\n🟡 **Warnings** (4): Anomalous traffic, high memory, DNS tunneling, disk usage\n🟢 **Info** (12): Normal operations, connection logs, updates\n\n**Key findings**:\n- Multiple failed SSH login attempts from 45.33.32.156 — consider blocking this IP\n- Memory usage at 87% — monitor for potential memory leak\n- Self-signed certificate detected on external API connection\n\nI recommend running a full audit report. Would you like me to generate one?';
+    return 'Firewall status: **ACTIVE** ✅\n\nCurrent configuration:\n- **10 total rules** (8 active, 2 inactive)\n- **Allow rules**: 6 (HTTPS, HTTP, DNS, MySQL from LAN, SSH from LAN)\n- **Deny rules**: 4 (External SSH, ICMP from internal, Telnet, SMB)\n\n⚠️ **Recommendations**:\n1. Block port 445 (SMB) from all external sources\n2. Enable WireGuard VPN rule for secure remote access';
   }
   if (lower.includes('help') || lower.includes('what can')) {
-    return 'I\'m CyberWin AI Assistant. Here\'s what I can help with:\n\n🔍 **Security Analysis**\n- Vulnerability scanning and assessment\n- Threat detection and response\n- Security event analysis\n\n🌐 **Network Tools**\n- Network traffic monitoring\n- Connection analysis\n- DNS and routing diagnostics\n\n🛡️ **Firewall Management**\n- Rule creation and review\n- Traffic filtering recommendations\n- Access control policies\n\n📋 **System Administration**\n- Log analysis and reporting\n- System health monitoring\n- Configuration recommendations\n\nJust ask me about any security or system topic!';
+    return "I'm **CyberWin AI Assistant**. I can help with:\n\n🔍 **Security Analysis** — Vulnerability scanning, threat detection\n🌐 **Network Tools** — Traffic monitoring, DNS diagnostics\n🛡️ **Firewall** — Rule management, access control\n📋 **System Admin** — Log analysis, health monitoring\n\nJust ask me anything!";
   }
   if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey')) {
-    return 'Hello! 👋 Welcome to CyberWin AI Assistant.\n\nI\'m here to help you with cybersecurity operations, network analysis, and system management. The system is currently showing **LOW** threat level with all security services running normally.\n\nHow can I assist you today?';
+    return 'Hello! 👋 Welcome to **CyberWin AI Assistant**.\n\nSystem showing **LOW** threat level with all security services running normally.\n\nHow can I assist you today?';
   }
-
-  const responses = [
-    'I\'ve analyzed your request. Based on the current system state, everything appears to be operating within normal parameters. The threat level remains LOW and all security services are active.\n\nIs there a specific aspect you\'d like me to investigate further?',
-    'That\'s a good question. From a security perspective, I\'d recommend:\n\n1. Regular vulnerability assessments\n2. Network segmentation monitoring\n3. Log review and anomaly detection\n4. Keeping all systems patched\n\nThe current system shows 24 active connections with the firewall actively filtering traffic. All critical services are operational.',
-    'Based on the current system telemetry, here\'s what I can tell you:\n\n- System uptime: 3 days, 7 hours\n- Active security events: 0 critical in the last hour\n- Network bandwidth: Within normal range\n- Disk usage: 82% (monitor /var/log)\n\nWould you like me to dig deeper into any of these metrics?',
-  ];
-  return responses[Math.floor(Math.random() * responses.length)];
+  return 'Based on the current system state, everything is operating within normal parameters. The threat level remains **LOW** and all security services are active.\n\nIs there a specific aspect you\'d like me to investigate further?';
 }
 
 export default function AIAssistantApp({ windowId: _windowId }: AppProps) {
@@ -61,38 +53,80 @@ export default function AIAssistantApp({ windowId: _windowId }: AppProps) {
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [msgId, setMsgId] = useState(1);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const {
+    isListening, isSupported, interimTranscript, finalTranscript,
+    startListening, stopListening,
+  } = useSpeechRecognition();
+
+  // Auto-scroll
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      const el = scrollRef.current;
+      const viewport = el.closest('[data-radix-scroll-area-viewport]') || el.parentElement;
+      if (viewport) viewport.scrollTop = viewport.scrollHeight;
     }
   }, [messages, isTyping]);
 
-  const sendMessage = () => {
+  // Mic transcript → auto-send
+  useEffect(() => {
+    if (finalTranscript) {
+      setInput(finalTranscript);
+      stopListening();
+    }
+  }, [finalTranscript, stopListening]);
+
+  const sendMessage = useCallback(async () => {
     if (!input.trim()) return;
-    const userMsg: ChatMessage = { id: msgId, role: 'user', content: input.trim(), timestamp: getTimestamp() };
-    setMsgId((p) => p + 1);
+    const userText = input.trim();
+    const userMsg: ChatMessage = { id: msgId, role: 'user', content: userText, timestamp: getTimestamp() };
+    const nextId = msgId + 1;
+    setMsgId(nextId + 1);
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setIsTyping(true);
+    inputRef.current?.focus();
 
-    const userText = input.trim();
-    setTimeout(() => {
-      const response = generateAIResponse(userText);
-      const aiMsg: ChatMessage = { id: msgId + 1, role: 'assistant', content: response, timestamp: getTimestamp() };
-      setMsgId((p) => p + 2);
+    // Try real API first, fallback to local
+    try {
+      const res = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: [{ role: 'user', content: userText }] }),
+      });
+      const data = await res.json();
+      const aiText = data?.text || generateLocalResponse(userText);
+      const aiMsg: ChatMessage = { id: nextId, role: 'assistant', content: aiText, timestamp: getTimestamp() };
       setMessages((prev) => [...prev, aiMsg]);
+      if (voiceEnabled) speakDirect(aiText);
+    } catch {
+      // Fallback to local response
+      const response = generateLocalResponse(userText);
+      const aiMsg: ChatMessage = { id: nextId, role: 'assistant', content: response, timestamp: getTimestamp() };
+      setMessages((prev) => [...prev, aiMsg]);
+      if (voiceEnabled) speakDirect(response);
+    } finally {
       setIsTyping(false);
-    }, 800 + Math.random() * 700);
-  };
+    }
+  }, [input, msgId, voiceEnabled]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  };
+
+  const toggleMic = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      stopSpeaking();
+      startListening();
     }
   };
 
@@ -110,11 +144,20 @@ export default function AIAssistantApp({ windowId: _windowId }: AppProps) {
             Online
           </div>
         </div>
+        <button
+          onClick={() => setVoiceEnabled((v) => !v)}
+          className={`ml-auto text-xs px-2 py-1 rounded-md transition-colors ${
+            voiceEnabled ? 'bg-cyan-500/10 text-cyan-400' : 'bg-white/[0.04] text-gray-500'
+          }`}
+          title={voiceEnabled ? 'Voice ON' : 'Voice OFF'}
+        >
+          {voiceEnabled ? '🔊' : '🔇'}
+        </button>
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1" ref={scrollRef}>
-        <div className="p-4 space-y-4">
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4" ref={scrollRef}>
           {messages.map((msg) => (
             <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
               <Avatar className="h-7 w-7 shrink-0 mt-0.5">
@@ -153,15 +196,36 @@ export default function AIAssistantApp({ windowId: _windowId }: AppProps) {
         </div>
       </ScrollArea>
 
+      {/* Mic interim transcript */}
+      {isListening && interimTranscript && (
+        <div className="px-4 py-1 text-[11px] text-red-400/80 italic truncate border-t border-white/[0.04]">
+          🎤 {interimTranscript}
+        </div>
+      )}
+
       {/* Input */}
       <div className="border-t border-white/[0.06] p-3 shrink-0">
         <div className="flex items-center gap-2">
+          {isSupported && (
+            <button
+              onClick={toggleMic}
+              className={`shrink-0 w-9 h-9 rounded-lg flex items-center justify-center transition-all ${
+                isListening
+                  ? 'bg-red-500/20 text-red-400'
+                  : 'bg-white/[0.04] text-gray-400 hover:text-cyan-400'
+              }`}
+              style={isListening ? { animation: 'micPulse 1.5s ease-in-out infinite' } : undefined}
+              aria-label={isListening ? 'Stop listening' : 'Start listening'}
+            >
+              {isListening ? <Mic size={16} /> : <MicOff size={16} />}
+            </button>
+          )}
           <Input
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask me anything about security..."
+            placeholder={isListening ? '🎤 Listening...' : 'Ask me anything about security...'}
             className="bg-white/[0.04] border-white/[0.06] text-sm"
             disabled={isTyping}
           />

@@ -95,7 +95,9 @@ export default function LogViewerApp({ windowId: _windowId }: AppProps) {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      const el = scrollRef.current;
+      const viewport = el.closest('[data-radix-scroll-area-viewport]') || el.parentElement;
+      if (viewport) viewport.scrollTop = viewport.scrollHeight;
     }
   }, [logs]);
 
@@ -159,8 +161,8 @@ export default function LogViewerApp({ windowId: _windowId }: AppProps) {
       </div>
 
       {/* Log List */}
-      <ScrollArea className="flex-1" ref={scrollRef}>
-        <div className="font-mono text-xs">
+      <ScrollArea className="flex-1">
+        <div className="font-mono text-xs" ref={scrollRef}>
           {filteredLogs.map((log) => (
             <div key={log.id} className="flex items-start gap-2 px-3 py-1.5 hover:bg-white/[0.02] border-b border-white/[0.02]">
               <span className="text-gray-600 shrink-0 text-[11px]">{log.timestamp}</span>

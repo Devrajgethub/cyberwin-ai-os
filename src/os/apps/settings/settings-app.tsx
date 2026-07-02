@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Monitor, Palette, HardDrive, Globe, ShieldCheck, Bug, Volume2, Wand2 } from 'lucide-react';
+import { Monitor, Palette, HardDrive, Globe, ShieldCheck, Bug, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -18,12 +18,12 @@ const GRADIENT_WALLPAPERS = [
 ];
 
 const IMAGE_WALLPAPERS = [
-  { id: 'neon-city', label: 'Neon City', value: 'url(/wallpapers/neon-city.jpg) center/cover no-repeat' },
-  { id: 'motherboard', label: 'Motherboard', value: 'url(/wallpapers/motherboard-led.jpg) center/cover no-repeat' },
-  { id: 'dark-wave', label: 'Dark Wave', value: 'url(/wallpapers/cyber-dark-wave.jpg) center/cover no-repeat' },
-  { id: 'neon-grid', label: 'Neon Grid', value: 'url(/wallpapers/neon-grid.jpg) center/cover no-repeat' },
-  { id: 'scene-1', label: 'Cyber Scene 1', value: 'url(/wallpapers/cyberpunk-scene-1.png) center/cover no-repeat' },
-  { id: 'scene-2', label: 'Cyber Scene 2', value: 'url(/wallpapers/cyberpunk-scene-2.png) center/cover no-repeat' },
+  { id: 'neon-city', label: 'Neon City', value: 'url(/wallpapers/neon-city.svg) center/cover no-repeat' },
+  { id: 'motherboard', label: 'Motherboard', value: 'url(/wallpapers/motherboard-led.svg) center/cover no-repeat' },
+  { id: 'dark-wave', label: 'Dark Wave', value: 'url(/wallpapers/cyber-dark-wave.svg) center/cover no-repeat' },
+  { id: 'neon-grid', label: 'Neon Grid', value: 'url(/wallpapers/neon-grid.svg) center/cover no-repeat' },
+  { id: 'scene-1', label: 'Cyber Scene 1', value: 'url(/wallpapers/cyberpunk-scene-1.svg) center/cover no-repeat' },
+  { id: 'scene-2', label: 'Cyber Scene 2', value: 'url(/wallpapers/cyberpunk-scene-2.svg) center/cover no-repeat' },
 ];
 
 const ALL_WALLPAPERS = [...GRADIENT_WALLPAPERS, ...IMAGE_WALLPAPERS];

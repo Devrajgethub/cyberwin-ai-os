@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import {
   CheckCircle2, Database, Clock, HardDrive, RotateCcw,
-  Loader2, Plus, Calendar, Archive,
+  Loader2, Plus, Calendar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
